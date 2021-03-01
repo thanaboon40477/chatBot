@@ -1,0 +1,148 @@
+{% extends "layout.html" %} 
+{% block content %}
+<br /><br /><br /><br /><br />
+<div id="app">
+  <v-app id="inspire">
+    <v-container>
+      <center>
+        <v-img
+          src="\static\images\shinchan.jpg"
+          max-width="200px"
+          height="200px"
+        >
+        </v-img>
+      </center>
+      <br />
+      <v-form v-model="valid" ref="form">
+        <v-text-field
+          type="text"
+          label="Firstname"
+          :rules="validFname"
+          v-model="formValidate.fname"
+          required
+          outlined
+          dense
+        ></v-text-field>
+        <v-text-field
+          type="text"
+          label="Lastname"
+          :rules="validLname"
+          v-model="formValidate.lname"
+          dense
+          required
+          outlined
+        ></v-text-field>
+          <v-text-field
+            type="text"
+            label="Company"
+            :rules="validCompany"
+            v-model="formValidate.company"
+            required
+            outlined
+            dense
+          ></v-text-field>
+          <v-text-field
+          type="tel"
+          label="Tel."
+          :rules="validTel"
+          v-model="formValidate.tel"
+          required
+          outlined
+          dense
+        ></v-text-field>
+        <v-select
+        :items="product"
+        label="Select Product:"
+        :rules="validProduct"
+        v-model="formValidate.product"
+        required
+        outlined
+        dense
+        ></v-select>
+        <br>
+        <v-btn color="success" :disabled="!valid" @click="validator">Submit</v-btn>
+      </v-form>
+    </v-container>
+</v-app>
+</div>
+
+<script>
+  new Vue({
+    el: "#app",
+    vuetify: new Vuetify(),
+    data: () => ({
+      validFname: [v => !!v || "Please Input your Firstname"],
+      validLname: [v => !!v || "Please Input your Lastname"],
+      validCompany: [v => !!v || "Please Input your Company"],
+      validTel: [v => !!v || "Please Input your Tel."],
+      validProduct:[v => !!v || "Please Select Product"],
+      product: ['Consulting', 'Real Estate', 'Project Planning', 'Other'],
+      formValidate: {
+        fname: "",
+        lname: "",
+        company: "",
+        tel: "",
+        product: null
+      },
+      valid: false,
+      img: "",
+      usid: "",
+      name: "",
+      email: ""
+    }),
+    created() {
+      liff.init(
+        { liffId: "1655689466-JDaD6zVy" }, () => {
+          if (liff.isLoggedIn()) {
+
+          } else {
+            liff.login();
+          }
+        },(err) => console.error(err.code, error.messages))
+    },
+    methods:{
+        validator(){
+            let already = this.$refs.form.validate()
+            if (already === true){
+                liff.getProfile()
+                .then(profile => {
+                    this.img = profile.pictureUrl
+                    this.usid = profile.userId
+                    this.name = profile.displayName
+                    this.email = liff.getDecodedIDToken().email 
+
+                    let group = { firstname:this.formValidate.fname, lastname:this.formValidate.lname, company:this.formValidate.company,
+                                  tel:this.formValidate.tel, product:this.formValidate.product, image:this.img, userId:this.usid,
+                                  linename:this.name, email:this.email 
+                    }
+                      this.tranferData(group)
+                      console.log(group)
+                })
+            } else {
+              console.log("ERROR")
+            }
+        },
+        tranferData(data){
+          const path = "/lineliff"
+          axios.post(path,data)
+            .then(() => {
+                this.alertPopup()
+                console.log('Tranfer Complete')
+            })
+            .catch((err) => {
+                console.error(err)
+            })
+        },
+        alertPopup(){
+          Swal.fire(
+            'Complete!',
+            'Your information was save',
+            'success'
+          )
+        }
+    },
+    delemiters: ["[[", "]]"],
+  });
+</script>
+
+{% endblock %}
