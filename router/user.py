@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response, Body, HTTPException, APIRouter
+from fastapi import FastAPI, Request, Response, Body, HTTPException, APIRouter, Query, Form
 import uvicorn
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -8,7 +8,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, StickerSe
 import json
 import pyrebase
 from flexmasage import *
-from typing import Optional
+from typing import Optional, Dict, List
 from chatBot import chatBot
 
 with open("config/db_firebase.json", encoding="utf8") as json_file:
@@ -20,9 +20,6 @@ with open("config/db_firebase.json", encoding="utf8") as json_file:
     handler = WebhookHandler(json_load["channelSecret"])
 
 router = APIRouter()
-app = FastAPI()
-
-app.mount('/static', StaticFiles(directory='static'), name='static')
 templates = Jinja2Templates(directory='templates')
 
 @router.get('/index')
@@ -86,19 +83,20 @@ def message_type(event):
     texts = event.message.text
     print("Your Message :",texts)
     # userId = event_handler_add()[0]
-    # print("Your UserId :",userId)
+    userId = event.message.id
+    print("Your UserId :",userId)
     replyToken = event.reply_token
     print("Your replyToken :",replyToken)
     # TextSendMessage(text= 'สวัสดี 😀')
     if texts == "ไง":
-        line_bot_api.reply_message(replyToken, TextSendMessage(text='กรุณาเลือกหัวข้อ',
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text='กรุณาเลือกหัวข้อ',
                                quick_reply=QuickReply(items=[
                                    QuickReplyButton(image_url="https://media2.giphy.com/media/R3IxJW14a3QNa/giphy.gif?cid=ecf05e47ptuw3dl3x03u0i97mqhit3ryu9m5zipi90sokouz&rid=giphy.gif",action=MessageAction(label="สวัสดี", text="ยินดีต้อนรับ")),
                                   QuickReplyButton(image_url="https://static.wixstatic.com/media/afc648_7e70f2fcc96443efaa236f0fe18ac3d0~mv2.gif",action=CameraAction(label="ถ่ายภาพ"))
                                ])))
-    if texts:
-            word = chatBot(texts)
-            line_bot_api.reply_message(replyToken, TextSendMessage(text=word))
+    elif texts:
+        word = chatBot(texts)
+        line_bot_api.reply_message(replyToken, TextSendMessage(text=word))
 
 def event_type(event):
     typeline = event['message']['type']
@@ -112,11 +110,11 @@ def event_type(event):
     return event
 
 @router.get('/lineliff')
-def lineliff(request:Request):
+async def lineliffget(request:Request):
         return templates.TemplateResponse('line.html', context={'request':request})
 
 @router.post('/lineliff')
-def lineliff(request:Request, raw_json:Optional[dict] = Body(None)):
+async def lineliffpost(request:Request, raw_json:Optional[dict] = Body(None)):
         # เมื่อมีการ POST จะแสดง FlexMesseage ใน Line (LineLiff)
         event = raw_json
         firstname = event["firstname"]
@@ -131,6 +129,17 @@ def lineliff(request:Request, raw_json:Optional[dict] = Body(None)):
         flexprofile = flexuser(image, linename, firstname, email, company, tel, product)
         line_bot_api.push_message(userId, flexprofile)
         return event
+
+@router.get('/pushdata')
+async def pushdataget(request:Request):
+        return templates.TemplateResponse('learnBot.html', context={'request':request})
+
+@router.post("/pushdata")
+async def pushdatapost(question: str = Form(...),
+                    answer: str = Form(...)):
+    db.child('chatbot').child('data').push({"Question":question,"Answer":answer})
+
+    return {"message":"success"}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", debug=True)

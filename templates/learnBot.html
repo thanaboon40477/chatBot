@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block content %}
+<br><br><br><br>
+<div id="app">
+    <v-app id="inspire">
+        <v-form>
+            <v-container>
+                <v-row>
+                    <v-text-field
+                      label="Question"
+                      type="text"
+                      placeholder="Enter For Question Bot "
+                      v-model="question"
+                      outlined
+                      dense
+                      clearable
+                      :rules="[rules.required]"
+                    ></v-text-field>
+                </v-row>  
+                <v-row>
+                    <v-text-field
+                      label="Answer"
+                      type="text"
+                      placeholder="Enter For Answer Bot"
+                      v-model="answer"
+                      outlined
+                      dense
+                      clearable
+                      :rules="[rules.required]"
+                    ></v-text-field>
+                </v-row>
+                <v-row>
+                    <v-btn 
+                        color="success" 
+                        @click='tranferData'
+                        >submit</v-btn>
+                    </div>
+            </v-row>
+            </v-contอainer>
+        </v-form>
+    </v-app>
+</div>
+
+<script>
+    new Vue({
+        el: "#app",
+        vuetify: new Vuetify(),
+        data: () => ({
+                
+                question: "",
+                answer: "",
+                rules: {
+                    required: value => !!value || 'This field is required'
+                    }
+            
+        }),
+        methods:{
+            pushData(data){
+                let bot = { question:this.question, answer:this.answer }
+                this.tranferData(bot)
+                console.log(bot)
+            },
+            tranferData(){
+                const path = "/users/pushdata"
+                var form = new FormData();
+                form.append('question',this.question)
+                form.append('answer',this.answer)
+                axios.post(path, form,{headers:{"Content-Type": "multipart/form-data"}})
+                .then(() => {
+                    this.alertPopup()
+                    console.log("Tranfer Complate")
+                })
+                .catch((err) => {
+                    console.error(err)
+                })
+            },
+            alertPopup(){
+                Swal.fire(
+                    'Complete!',
+                    'Your information was save',
+                    'success'
+                )
+            }  
+        },
+        delimiters: ["[[", "]]"]
+    })
+</script>
+
+{% endblock %}

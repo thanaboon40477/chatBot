@@ -23,6 +23,8 @@ templates = Jinja2Templates(directory='templates')
 async def index(request: Request):
     return templates.TemplateResponse('index.html', context={'request':request})
 
+
+
 if __name__ == "__main__":
     uvicorn.run("app:app", debug=True)
 
