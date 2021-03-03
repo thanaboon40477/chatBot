@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Request, Response, Body, HTTPException, APIRouter, Query, Form
+from fastapi import FastAPI, Request, Response, Body, HTTPException, APIRouter, Form
 import uvicorn
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -8,7 +7,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, StickerSe
 import json
 import pyrebase
 from flexmasage import *
-from typing import Optional, Dict, List
+from typing import Optional
 from chatBot import chatBot
 
 with open("config/db_firebase.json", encoding="utf8") as json_file:
@@ -22,9 +21,9 @@ with open("config/db_firebase.json", encoding="utf8") as json_file:
 router = APIRouter()
 templates = Jinja2Templates(directory='templates')
 
-@router.get('/index')
-async def index(request: Request):
-    return templates.TemplateResponse('index.html', context={'request':request})
+# @router.get('/index')
+# async def index(request: Request):
+#     return templates.TemplateResponse('index.html', context={'request':request})
 
 
 @router.post('/chatbot')
